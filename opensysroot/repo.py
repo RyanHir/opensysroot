@@ -16,5 +16,5 @@ def get_repo_url(distro: Distro, arch: Arch):
 def get_repo_packages_url(distro: Distro, arch: Arch, release: Release):
     repo = get_repo_url(distro, arch)
     if distro is Distro.ROBORIO:
-        return f"{repo}/Packages.gz"
-    return f"{repo}/dists/{release}/main/binary-{arch}/Packages.gz"
+        return "{}/Packages.gz".format(repo)
+    return "{}/dists/{}/main/binary-{}/Packages.gz".format(repo, release, arch)

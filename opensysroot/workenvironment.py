@@ -59,9 +59,9 @@ class WorkEnvironment:
                 continue
             resolved = Path(os.readlink(file))
             if resolved.is_absolute():
-                resolved = Path(f"{self.sysroot}/{resolved}")
+                resolved = Path("{}/{}".format(self.sysroot, resolved))
             elif file.is_file():
-                resolved = Path(f"{file.parent.absolute()}/{resolved}")
+                resolved = Path("{}/{}".format(file.parent.absolute(), resolved))
             resolved = resolved.resolve()
             file.unlink()
             if resolved.exists():

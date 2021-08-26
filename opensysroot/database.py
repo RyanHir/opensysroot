@@ -51,7 +51,7 @@ class Database:
 
     def find_similar(self, name):
         self.cur.execute(
-            f"SELECT Name FROM Packages WHERE Name LIKE '%%{name}%%'")
+            "SELECT Name FROM Packages WHERE Name LIKE '%%{}%%'".format(name))
         rows = self.cur.fetchall()
         return rows
 
@@ -82,10 +82,10 @@ class Database:
         if name in self.PACKAGES_TO_INSTALL:
             return
         self.cur.execute(
-            f"SELECT Filename, Dependencies FROM Packages WHERE Name='{name}'")
+            "SELECT Filename, Dependencies FROM Packages WHERE Name='{}'".format(name))
         info = self.cur.fetchone()
         if not info:
-            raise RuntimeError(f"Cannot find exact package {name}")
+            raise RuntimeError("Cannot find exact package {}".format(name))
         self.PACKAGES_TO_INSTALL[name] = {"name": name, "filename": info[0]}
 
         if version:
@@ -113,11 +113,11 @@ class Database:
         assert downloads.is_dir()
         for pkg in self.PACKAGES_TO_INSTALL.values():
             pkg_file = pkg["filename"].split("/")[-1]
-            print(f"Downloading {pkg_file}")
+            print("Downloading {}".format(pkg_file))
             pkg_file = Path(downloads, pkg_file)
             if pkg_file.exists():
                 continue
-            pkg_data = requests.get(f"{repo_url}/{pkg['filename']}")
+            pkg_data = requests.get("{}/{}".format(repo_url, pkg['filename']))
             assert pkg_data.status_code == 200
             with pkg_file.open("wb") as fd:
                 fd.write(pkg_data.content)
