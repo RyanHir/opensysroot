@@ -27,15 +27,15 @@ class WorkEnvironment:
     sysroot: Path
     downloads: Path
 
-    def __init__(self, distro: Distro, arch: Arch, release: Release, workdir: Path, print_dest_sysroot: Optional[Path]):
+    def __init__(self, distro: Distro, arch: Arch, release: Release, workdir: Path, print_dest_sysroot: bool):
         self.arch = arch
         self.distro = distro
         self.base = Path(workdir, str(distro), str(release), str(arch))
         self.sysroot = Path(self.base, "sysroot")
         self.downloads = Path(self.base, "downloads")
 
-        if print_dest_sysroot is not None:
-            print(print_dest_sysroot.resolve())
+        if print_dest_sysroot:
+            print(self.sysroot.resolve())
             exit(0)
 
         if self.sysroot.exists():
