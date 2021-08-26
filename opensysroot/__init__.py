@@ -33,11 +33,8 @@ def main():
     repo_packages_url = repo.get_repo_packages_url(
         args.distro, args.arch, args.release)
 
-    env = WorkEnvironment(args.distro, args.arch, args.release, args.output)
-
-    if args.print_dest_sysroot:
-        print(env.sysroot.resolve())
-        return
+    env = WorkEnvironment(args.distro, args.arch, args.release,
+                          args.output, args.print_dest_sysroot)
 
     db = Database(repo_packages_url)
     if args.distro == Distro.ROBORIO:

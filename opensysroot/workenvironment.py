@@ -3,6 +3,7 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
+from typing import Optional
 from .enums.arch import Arch
 from .enums.distro import Distro
 from .enums.release import Release
@@ -20,17 +21,22 @@ TO_DELETE = [
     "usr/lib/{tuple}/pkgconfig",
 ]
 
+
 class WorkEnvironment:
     base: Path
     sysroot: Path
     downloads: Path
 
-    def __init__(self, distro: Distro, arch: Arch, release: Release, workdir: Path):
+    def __init__(self, distro: Distro, arch: Arch, release: Release, workdir: Path, print_dest_sysroot: Optional[Path]):
         self.arch = arch
         self.distro = distro
         self.base = Path(workdir, str(distro), str(release), str(arch))
         self.sysroot = Path(self.base, "sysroot")
         self.downloads = Path(self.base, "downloads")
+
+        if print_dest_sysroot is not None:
+            print(print_dest_sysroot.resolve())
+            exit(0)
 
         if self.sysroot.exists():
             shutil.rmtree(self.sysroot)
@@ -61,7 +67,8 @@ class WorkEnvironment:
             if resolved.is_absolute():
                 resolved = Path("{}/{}".format(self.sysroot, resolved))
             elif file.is_file():
-                resolved = Path("{}/{}".format(file.parent.absolute(), resolved))
+                resolved = Path(
+                    "{}/{}".format(file.parent.absolute(), resolved))
             resolved = resolved.resolve()
             file.unlink()
             if resolved.exists():
