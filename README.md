@@ -30,7 +30,7 @@ python3 -m pip install git+https://github.com/RyanHir/opensysroot
 python3 -m opensysroot DISTRO ARCH RELEASE OUTPUT [EXTRA_ARGS]
 
 # Ubuntu x86_64 Focal Fossa sysroot
-python3 -m opensysroot ubuntu amd64 focal
+python3 -m opensysroot ubuntu amd64 focal build_dir
 
 # For more info
 python3 -m opensysroot -h
