@@ -39,16 +39,12 @@ def main():
     db = Database(repo_packages_url)
     if args.distro == Distro.ROBORIO:
         assert args.arch is Arch.CORTEXA9
-        db.add_package("gcc-dev")
         db.add_package("libc6-dev")
-        db.add_package("libstdc++-dev")
-        db.add_package("libatomic-dev")
         db.add_package("linux-libc-headers-dev")
     else:
         assert args.arch is not Arch.CORTEXA9
-        db.add_package("build-essential")
+        db.add_package("libc6-dev")
         db.add_package("linux-libc-dev")
-        db.add_package("libatomic1")
 
     db.post_resolve()
     db.download(repo_url, env.downloads)

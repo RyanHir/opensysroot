@@ -3,28 +3,17 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Optional
 from .enums.arch import Arch
 from .enums.distro import Distro
 from .enums.release import Release
 
 TO_DELETE = [
     "etc",
-    "var",
-    "bin",
     "sbin",
     "usr/bin",
-    "usr/sbin",
     "usr/share",
-    "usr/lib/{tuple}/perl",
-    "usr/lib/{tuple}/perl-base",
-    "usr/lib/{tuple}/pkgconfig",
-]
-
-ROBORIO_TO_RENAME = [
-    "usr/include/c++/{ver}",
-    "usr/lib/gcc/{tuple}/{ver}",
-    "usr/libexec/gcc/{tuple}/{ver}",
+    "usr/lib/bfd-plugins",
+    "usr/lib/gcc",
 ]
 
 class WorkEnvironment:
@@ -56,24 +45,11 @@ class WorkEnvironment:
     def clean(self):
         self._symlink()
         self._delete()
-        if self.distro is Distro.ROBORIO:
-            self._major_only()
-
-    def _major_only(self):
-        ver = self.get_gcc_ver()
-        ver_major = ver.split(".")[0]
-        tuple = self.get_orig_tuple()
-        for dir in ROBORIO_TO_RENAME:
-            oldname = dir.format(ver=ver, tuple=tuple)
-            newname = dir.format(ver=ver_major, tuple=tuple)
-            oldname = Path(self.sysroot, oldname)
-            newname = Path(self.sysroot, newname)
-            shutil.move(oldname, newname)
 
     def _delete(self):
-        tuple = self.get_orig_tuple()
+        _tuple = self.get_orig_tuple()
         for subpath in TO_DELETE:
-            xdir = Path(self.sysroot, subpath.format(tuple=tuple))
+            xdir = Path(self.sysroot, subpath.format(tuple=_tuple))
             if xdir.exists():
                 shutil.rmtree(xdir)
 
@@ -104,14 +80,6 @@ class WorkEnvironment:
             if self.arch is Arch.AMD64:
                 return "x86_64-linux-gnu"
             raise RuntimeError("Unknown System")
-
-    def get_gcc_ver(self):
-        assert self.distro is Distro.ROBORIO, "GCC check only works on roborio"
-        cxx_headers = Path(self.sysroot, "usr/include/c++")
-        assert cxx_headers.is_dir()
-        children = list(cxx_headers.iterdir())
-        assert len(children) == 1
-        return os.path.basename(children[0])
 
     def rename_target(self, newname: str):
         oldname = self.get_orig_tuple()
