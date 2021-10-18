@@ -19,6 +19,7 @@ TO_DELETE = [
     "usr/lib/{tuple}/perl",
     "usr/lib/{tuple}/perl-base",
     "usr/lib/{tuple}/pkgconfig",
+    "usr/libexec"
 ]
 
 ROBORIO_TO_RENAME = [

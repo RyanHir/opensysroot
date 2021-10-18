@@ -1,0 +1,16 @@
+README.md
+opensysroot/__init__.py
+opensysroot/__main__.py
+opensysroot/consts.py
+opensysroot/database.py
+opensysroot/repo.py
+opensysroot/workenvironment.py
+opensysroot.egg-info/PKG-INFO
+opensysroot.egg-info/SOURCES.txt
+opensysroot.egg-info/dependency_links.txt
+opensysroot.egg-info/requires.txt
+opensysroot.egg-info/top_level.txt
+opensysroot/enums/__init__.py
+opensysroot/enums/arch.py
+opensysroot/enums/distro.py
+opensysroot/enums/release.py
