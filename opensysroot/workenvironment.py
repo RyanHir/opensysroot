@@ -25,7 +25,6 @@ TO_DELETE = [
 ROBORIO_TO_RENAME = [
     "usr/include/c++/{ver}",
     "usr/lib/gcc/{tuple}/{ver}",
-    "usr/libexec/gcc/{tuple}/{ver}",
 ]
 
 class WorkEnvironment:
