@@ -12,6 +12,19 @@ YAML_PKG_PATH = re.compile(r"(^Filename: )(.*)")
 YAML_PKG_DEP = re.compile(r"(^Depends: )(.*)")
 YAML_PKG_VER = re.compile(r"(^Version: )(.*)")
 
+_DB_INIT = """
+CREATE TABLE Packages(ID integer primary key autoincrement,
+                      Name, Version, Filename, Dependencies)
+"""
+_DB_INSERT = """
+INSERT INTO Packages
+    (Name, Version, Filename, Dependencies)
+    VALUES (?,?,?,?)
+"""
+_DB_FIND = """
+SELECT Name FROM Packages WHERE Name LIKE '%%{}%%'
+"""
+
 def _parse_lists(packages: str, cursor: sqlite3.Cursor) -> list[str]:
     """
     Parse the package lists from the Distro database.
@@ -49,10 +62,7 @@ def _parse_lists(packages: str, cursor: sqlite3.Cursor) -> list[str]:
             line = data.readline().strip()
         if name is None or vers is None or path is None:
             continue
-        cmd = "INSERT INTO Packages " \
-            "(Name, Version, Filename, Dependencies) VALUES "\
-            "(?,?,?,?)"
-        cursor.execute(cmd, (name, vers, path, deps))
+        cursor.execute(_DB_INSERT, (name, vers, path, deps))
 
 class Database:
     con: sqlite3.Connection
@@ -65,8 +75,7 @@ class Database:
         self.DEPENDENCIES_TO_RESOLVE = list()
         self.con = sqlite3.connect(":memory:")
         self.cur = self.con.cursor()
-        self.cur.execute("CREATE TABLE Packages(ID integer primary key autoincrement, "
-                         "Name, Version, Filename, Dependencies)")
+        self.cur.execute(_DB_INIT)
         data = requests.get(package_url)
         assert data.status_code == 200, package_url
         data = gzip.decompress(data.content)
@@ -74,8 +83,7 @@ class Database:
         self.con.commit()
 
     def find_similar(self, name):
-        self.cur.execute(
-            "SELECT Name FROM Packages WHERE Name LIKE '%%{}%%'".format(name))
+        self.cur.execute(_DB_FIND.format(name))
         rows = self.cur.fetchall()
         return rows
 
