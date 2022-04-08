@@ -17,13 +17,20 @@ YAML_PKG_LICENSE = re.compile(r"(^License: )(.*)")
 YAML_PKG_SECTION = re.compile(r"(^License: )(.*)")
 
 _DB_INIT = """
-CREATE TABLE Packages(ID integer primary key autoincrement,
-                      Architecture, Name, Version, Filename, Dependencies, License, Section)
+CREATE TABLE Packages(Name primary key,
+    Architecture, Version, Filename, Dependencies);
+CREATE TABLE PackageInfo(Name primary key,
+    License, Section);
 """
 _DB_INSERT = """
 INSERT INTO Packages
-    (Architecture, Name, Version, Filename, Dependencies, License, Section)
-    VALUES (?,?,?,?,?,?,?)
+    (Name, Architecture, Version, Filename, Dependencies)
+    VALUES (?,?,?,?,?)
+"""
+_DB_INSERT_EXTRA = """
+INSERT INTO PackageInfo
+    (Name, License, Section)
+    VALUES (?,?,?)
 """
 _DB_FIND = """
 SELECT Name FROM Packages WHERE Name LIKE '%%{}%%'
@@ -83,7 +90,8 @@ def _parse_lists(packages: str, cursor: sqlite3.Cursor):
             line = data.readline().strip()
         if name is None or vers is None or path is None:
             continue
-        cursor.execute(_DB_INSERT, (arch, name, vers, path, deps, license, section))
+        cursor.execute(_DB_INSERT, (name, arch, vers, path, deps))
+        cursor.execute(_DB_INSERT_EXTRA, (name, license, section))
 
 class Database:
     con: sqlite3.Connection
@@ -96,7 +104,7 @@ class Database:
         self.DEPENDENCIES_TO_RESOLVE = list()
         self.con = sqlite3.connect(":memory:")
         self.cur = self.con.cursor()
-        self.cur.execute(_DB_INIT)
+        self.cur.executescript(_DB_INIT)
         data = requests.get(package_url)
         assert data.status_code == 200, package_url
         data = gzip.decompress(data.content)
