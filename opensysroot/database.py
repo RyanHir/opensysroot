@@ -147,10 +147,11 @@ class Database:
         assert downloads.is_dir()
         for pkg in self.PACKAGES_TO_INSTALL.values():
             pkg_file = pkg["filename"].split("/")[-1]
-            print("Downloading {}".format(pkg_file))
             pkg_file = Path(downloads, pkg_file)
             if pkg_file.exists():
+                print("Using cached {}".format(pkg_file.name))
                 continue
+            print("Downloading {}".format(pkg_file.name))
             pkg_data = requests.get("{}/{}".format(repo_url, pkg['filename']))
             assert pkg_data.status_code == 200
             with pkg_file.open("wb") as fd:
