@@ -8,20 +8,22 @@ import requests
 
 PACKAGE_VERSION_REGEX = re.compile(r'(\S+) \((\S+) (\S+)\)')
 
+YAML_PKG_ARCH = re.compile(r"(^Architecture: )(.*)")
 YAML_PKG_NAME = re.compile(r"(^Package: )(.*)")
 YAML_PKG_PATH = re.compile(r"(^Filename: )(.*)")
 YAML_PKG_DEP = re.compile(r"(^Depends: )(.*)")
 YAML_PKG_VER = re.compile(r"(^Version: )(.*)")
 YAML_PKG_LICENSE = re.compile(r"(^License: )(.*)")
+YAML_PKG_SECTION = re.compile(r"(^License: )(.*)")
 
 _DB_INIT = """
 CREATE TABLE Packages(ID integer primary key autoincrement,
-                      Name, Version, Filename, Dependencies, License)
+                      Architecture, Name, Version, Filename, Dependencies, License, Section)
 """
 _DB_INSERT = """
 INSERT INTO Packages
-    (Name, Version, Filename, Dependencies, License)
-    VALUES (?,?,?,?,?)
+    (Architecture, Name, Version, Filename, Dependencies, License, Section)
+    VALUES (?,?,?,?,?,?,?)
 """
 _DB_FIND = """
 SELECT Name FROM Packages WHERE Name LIKE '%%{}%%'
@@ -45,21 +47,27 @@ def _parse_lists(packages: str, cursor: sqlite3.Cursor):
     for package in packages:
         data = io.StringIO(package)
         line = data.readline().strip()
+        arch: str = None
         name: str = None
         vers: str = None
         path: str = None
         deps: Optional[str] = None
         license: Optional[str] = None
+        section: Optional[str] = None
         while line:
             if len(line) == 0 or line[0] == ' ':
                 continue
+            _arch = YAML_PKG_ARCH.match(line)
             _pkg = YAML_PKG_NAME.match(line)
             _pwd = YAML_PKG_PATH.match(line)
             _ver = YAML_PKG_VER.match(line)
             _dep = YAML_PKG_DEP.match(line)
             _dep = YAML_PKG_DEP.match(line)
             _license = YAML_PKG_LICENSE.match(line)
-            if _pkg:
+            _section = YAML_PKG_SECTION.match(line)
+            if _arch:
+                arch = _arch.group(2).strip()
+            elif _pkg:
                 name = _pkg.group(2).strip()
             elif _pwd:
                 path = _pwd.group(2).strip()
@@ -69,10 +77,12 @@ def _parse_lists(packages: str, cursor: sqlite3.Cursor):
                 deps = _dep.group(2).strip()
             elif _license:
                 license = _license.group(2).strip()
+            elif _section:
+                section = _section.group(2).strip()
             line = data.readline().strip()
         if name is None or vers is None or path is None:
             continue
-        cursor.execute(_DB_INSERT, (name, vers, path, deps, license))
+        cursor.execute(_DB_INSERT, (arch, name, vers, path, deps, license, section))
 
 class Database:
     con: sqlite3.Connection
