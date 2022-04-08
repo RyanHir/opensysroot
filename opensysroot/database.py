@@ -17,10 +17,10 @@ YAML_PKG_LICENSE = re.compile(r"(^License: )(.*)")
 YAML_PKG_SECTION = re.compile(r"(^License: )(.*)")
 
 _DB_INIT = """
-CREATE TABLE Packages(Name primary key,
-    Architecture, Version, Filename, Dependencies);
-CREATE TABLE PackageInfo(Name primary key,
-    License, Section);
+CREATE TABLE Packages(ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    Name, Architecture, Version, Filename, Dependencies);
+CREATE TABLE PackageInfo(ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    Name, License, Section);
 """
 _DB_INSERT = """
 INSERT INTO Packages
@@ -32,7 +32,7 @@ INSERT INTO PackageInfo
     (Name, License, Section)
     VALUES (?,?,?)
 """
-_DB_FIND = """
+_DB_FIND_FUZZY_NAME = """
 SELECT Name FROM Packages WHERE Name LIKE '%%{}%%'
 """
 _DB_FIND_FILENAME = """
@@ -116,7 +116,7 @@ class Database:
         self.con.close()
 
     def find_similar(self, name):
-        self.cur.execute(_DB_FIND.format(name))
+        self.cur.execute(_DB_FIND_FUZZY_NAME.format(name))
         rows = self.cur.fetchall()
         return rows
 
