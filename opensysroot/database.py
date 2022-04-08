@@ -24,6 +24,9 @@ INSERT INTO Packages
 _DB_FIND = """
 SELECT Name FROM Packages WHERE Name LIKE '%%{}%%'
 """
+_DB_FIND_FILENAME = """
+SELECT Filename, Dependencies FROM Packages WHERE Name='{}'
+"""
 
 def _parse_lists(packages: str, cursor: sqlite3.Cursor):
     """
@@ -113,8 +116,7 @@ class Database:
         name = name.replace(':any', '')
         if name in self.PACKAGES_TO_INSTALL:
             return
-        self.cur.execute(
-            "SELECT Filename, Dependencies FROM Packages WHERE Name='{}'".format(name))
+        self.cur.execute(_DB_FIND_FILENAME.format(name))
         info = self.cur.fetchone()
         if not info:
             raise RuntimeError("Cannot find exact package {}".format(name))
