@@ -45,6 +45,7 @@ def _parse_lists(packages: str, cursor: sqlite3.Cursor):
         raise TypeError("cursor must be a sqlite3.Cursor")
     packages: list[str] = packages.split("\n\n")
     for package in packages:
+        # StringIO is used to iterate per line as if it were a file.
         data = io.StringIO(package)
         line = data.readline().strip()
         arch: str = None
