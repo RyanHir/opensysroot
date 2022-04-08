@@ -16,9 +16,14 @@ TO_DELETE = [
     "usr/bin",
     "usr/sbin",
     "usr/share",
+    "usr/lib/{tuple}/audit",
+    "usr/lib/{tuple}/ldscripts",
     "usr/lib/{tuple}/perl",
     "usr/lib/{tuple}/perl-base",
     "usr/lib/{tuple}/pkgconfig",
+    "usr/lib/bfd-plugins",
+    "usr/lib/compat-ld",
+    "usr/lib/gold-ld",
     "usr/libexec"
 ]
 
@@ -112,25 +117,3 @@ class WorkEnvironment:
         children = list(cxx_headers.iterdir())
         assert len(children) == 1
         return os.path.basename(children[0])
-
-    def rename_target(self, newname: str):
-        oldname = self.get_orig_tuple()
-        for file in self.sysroot.glob("**/*"):
-            if not file.is_file():
-                continue
-            msg = subprocess.Popen(
-                ["file", str(file.resolve())], stdout=subprocess.PIPE).communicate()[0]
-            if re.search("text", msg.decode("utf8")) == None:
-                continue
-            with file.open("r+") as fd:
-                data = fd.read()
-                data = data.replace(oldname, newname)
-                fd.write(data)
-        for subpath in self.sysroot.glob("**/*"):
-            if not subpath.is_dir():
-                continue
-            if subpath.stem != oldname:
-                continue
-            new = Path(subpath.parent, newname)
-            if subpath.exists():
-                shutil.move(subpath, new)

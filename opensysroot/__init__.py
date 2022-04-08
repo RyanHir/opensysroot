@@ -19,8 +19,6 @@ def arg_info():
     parser.add_argument("release", type=Release, choices=list(Release),
                         help="Release name of OS")
     parser.add_argument("output", type=Path, default=Path("build"))
-    parser.add_argument("--rename-tuple", type=str,
-                        help="new name for sysroot tuple")
     parser.add_argument("--print-dest-sysroot",
                         default=False, action='store_true')
     return parser.parse_args()
@@ -53,6 +51,3 @@ def main():
     db.download(repo_url, env.downloads)
     env.extract()
     env.clean()
-
-    if args.rename_tuple is not None:
-        env.rename_target(args.rename_tuple)
