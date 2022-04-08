@@ -3,6 +3,7 @@ from pathlib import Path
 import re
 import gzip
 import sqlite3
+from typing import Optional
 import requests
 
 PACKAGE_VERSION_REGEX = re.compile(r'(\S+) \((\S+) (\S+)\)')
@@ -11,15 +12,16 @@ YAML_PKG_NAME = re.compile(r"(^Package: )(.*)")
 YAML_PKG_PATH = re.compile(r"(^Filename: )(.*)")
 YAML_PKG_DEP = re.compile(r"(^Depends: )(.*)")
 YAML_PKG_VER = re.compile(r"(^Version: )(.*)")
+YAML_PKG_LICENSE = re.compile(r"(^License: )(.*)")
 
 _DB_INIT = """
 CREATE TABLE Packages(ID integer primary key autoincrement,
-                      Name, Version, Filename, Dependencies)
+                      Name, Version, Filename, Dependencies, License)
 """
 _DB_INSERT = """
 INSERT INTO Packages
-    (Name, Version, Filename, Dependencies)
-    VALUES (?,?,?,?)
+    (Name, Version, Filename, Dependencies, License)
+    VALUES (?,?,?,?,?)
 """
 _DB_FIND = """
 SELECT Name FROM Packages WHERE Name LIKE '%%{}%%'
@@ -43,10 +45,11 @@ def _parse_lists(packages: str, cursor: sqlite3.Cursor):
     for package in packages:
         data = io.StringIO(package)
         line = data.readline().strip()
-        name = None
-        vers = None
-        path = None
-        deps = None # Only optional
+        name: str = None
+        vers: str = None
+        path: str = None
+        deps: Optional[str] = None
+        license: Optional[str] = None
         while line:
             if len(line) == 0 or line[0] == ' ':
                 continue
@@ -54,6 +57,8 @@ def _parse_lists(packages: str, cursor: sqlite3.Cursor):
             _pwd = YAML_PKG_PATH.match(line)
             _ver = YAML_PKG_VER.match(line)
             _dep = YAML_PKG_DEP.match(line)
+            _dep = YAML_PKG_DEP.match(line)
+            _license = YAML_PKG_LICENSE.match(line)
             if _pkg:
                 name = _pkg.group(2).strip()
             elif _pwd:
@@ -62,10 +67,12 @@ def _parse_lists(packages: str, cursor: sqlite3.Cursor):
                 vers = _ver.group(2).strip()
             elif _dep:
                 deps = _dep.group(2).strip()
+            elif _license:
+                license = _license.group(2).strip()
             line = data.readline().strip()
         if name is None or vers is None or path is None:
             continue
-        cursor.execute(_DB_INSERT, (name, vers, path, deps))
+        cursor.execute(_DB_INSERT, (name, vers, path, deps, license))
 
 class Database:
     con: sqlite3.Connection
