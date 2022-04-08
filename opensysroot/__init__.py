@@ -46,9 +46,8 @@ def main():
         db.add_package("linux-libc-headers-dev")
     else:
         assert args.arch is not Arch.CORTEXA9
-        db.add_package("build-essential")
-        db.add_package("linux-libc-dev")
-        db.add_package("libatomic1")
+        db.add_package("gcc")
+        db.add_package("g++")
 
     db.post_resolve()
     db.download(repo_url, env.downloads)
