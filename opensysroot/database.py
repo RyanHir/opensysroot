@@ -7,6 +7,52 @@ import requests
 
 PACKAGE_VERSION_REGEX = re.compile(r'(\S+) \((\S+) (\S+)\)')
 
+YAML_PKG_NAME = re.compile(r"(^Package: )(.*)")
+YAML_PKG_PATH = re.compile(r"(^Filename: )(.*)")
+YAML_PKG_DEP = re.compile(r"(^Depends: )(.*)")
+YAML_PKG_VER = re.compile(r"(^Version: )(.*)")
+
+def _parse_lists(packages: str, cursor: sqlite3.Cursor) -> list[str]:
+    """
+    Parse the package lists from the Distro database.
+
+    :param packages: The package lists to parse.
+    :return: A list of packages.
+    """
+    if not isinstance(packages, str):
+        raise TypeError("Expected string, got {}".format(type(packages)))
+    if not isinstance(cursor, sqlite3.Cursor):
+        raise TypeError("cursor must be a sqlite3.Cursor")
+    packages: list[str] = packages.split("\n\n")
+    for package in packages:
+        data = io.StringIO(package)
+        line = data.readline().strip()
+        name = None
+        vers = None
+        path = None
+        deps = None # Only optional
+        while line:
+            if len(line) == 0 or line[0] == ' ':
+                continue
+            _pkg = YAML_PKG_NAME.match(line)
+            _pwd = YAML_PKG_PATH.match(line)
+            _ver = YAML_PKG_VER.match(line)
+            _dep = YAML_PKG_DEP.match(line)
+            if _pkg:
+                name = _pkg.group(2).strip()
+            elif _pwd:
+                path = _pwd.group(2).strip()
+            elif _ver:
+                vers = _ver.group(2).strip()
+            elif _dep:
+                deps = _dep.group(2).strip()
+            line = data.readline().strip()
+        if name is None or vers is None or path is None:
+            continue
+        cmd = "INSERT INTO Packages " \
+            "(Name, Version, Filename, Dependencies) VALUES "\
+            "(?,?,?,?)"
+        cursor.execute(cmd, (name, vers, path, deps))
 
 class Database:
     con: sqlite3.Connection
@@ -24,29 +70,7 @@ class Database:
         data = requests.get(package_url)
         assert data.status_code == 200, package_url
         data = gzip.decompress(data.content)
-        data = io.StringIO(data.strip().decode("utf8"))
-        line = data.readline().strip()
-        while line:
-            if line.startswith("Package:"):
-                pkg_name = line[9:].strip()
-
-                # predefine as it is optional
-                pkg_dep = None
-                while line:
-                    if line.startswith('Version:'):
-                        pkg_ver = line[9:].strip()
-                    elif line.startswith('Depends:'):
-                        pkg_dep = line[9:].strip()
-                    elif line.startswith('Filename:'):
-                        pkg_path = line[10:].strip()
-                    line = data.readline().strip()
-                cmd = "INSERT INTO Packages " \
-                    "(Name, Version, Filename, Dependencies) VALUES "\
-                    "(?,?,?,?)"
-                self.cur.execute(cmd, (pkg_name, pkg_ver, pkg_path, pkg_dep))
-                if line is None:
-                    break
-            line = data.readline().strip()
+        _parse_lists(data.strip().decode('utf8'), self.cur)
         self.con.commit()
 
     def find_similar(self, name):
