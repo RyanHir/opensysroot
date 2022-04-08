@@ -25,7 +25,7 @@ _DB_FIND = """
 SELECT Name FROM Packages WHERE Name LIKE '%%{}%%'
 """
 
-def _parse_lists(packages: str, cursor: sqlite3.Cursor) -> list[str]:
+def _parse_lists(packages: str, cursor: sqlite3.Cursor):
     """
     Parse the package lists from the Distro database.
 
