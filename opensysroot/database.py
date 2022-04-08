@@ -99,10 +99,10 @@ class Database:
     PACKAGES_TO_INSTALL: dict
     DEPENDENCIES_TO_RESOLVE: list
 
-    def __init__(self, package_url) -> None:
+    def __init__(self, package_url, db: str = ":memory:") -> None:
         self.PACKAGES_TO_INSTALL = dict()
         self.DEPENDENCIES_TO_RESOLVE = list()
-        self.con = sqlite3.connect(":memory:")
+        self.con = sqlite3.connect(db)
         self.cur = self.con.cursor()
         self.cur.executescript(_DB_INIT)
         data = requests.get(package_url)
@@ -110,6 +110,10 @@ class Database:
         data = gzip.decompress(data.content)
         _parse_lists(data.strip().decode('utf8'), self.cur)
         self.con.commit()
+
+    def __del__(self) -> None:
+        self.con.commit()
+        self.con.close()
 
     def find_similar(self, name):
         self.cur.execute(_DB_FIND.format(name))
