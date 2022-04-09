@@ -1,10 +1,15 @@
+"""
+The Packages lists for APG and OPKG are quite similar
+so the implementation is left as being distro agnostic
+as only Debian/Ubuntu and the NI RoboRio is targeted.
+"""
 import io
-from pathlib import Path
 import re
 import gzip
 import sqlite3
-from typing import Optional
 import requests
+from pathlib import Path
+from typing import Optional
 
 PACKAGE_VERSION_REGEX = re.compile(r'(\S+) \((\S+) (\S+)\)')
 

@@ -2,7 +2,7 @@ import argparse
 from pathlib import Path
 
 from . import repo
-from .database import Database
+from .db import Database
 from .workenvironment import WorkEnvironment
 from .enums.arch import Arch
 from .enums.distro import Distro
