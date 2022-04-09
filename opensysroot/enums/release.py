@@ -6,6 +6,7 @@ class Release(Enum):
     BUSTER = "buster"
     BULLSEYE = "bullseye"
     BOOKWORK = "bookworm"
+    SID = "sid"
     
     # Ubuntu
     BIONIC = "bionic"
