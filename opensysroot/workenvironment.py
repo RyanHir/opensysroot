@@ -37,12 +37,13 @@ class WorkEnvironment:
     sysroot: Path
     downloads: Path
 
-    def __init__(self, distro: Distro, arch: Arch, release: Release, workdir: Path, print_dest_sysroot: bool):
+    def __init__(self, distro: Distro, arch: Arch, release: Release, workdir: Path, print_dest_sysroot: bool, minimal_toolchain: bool):
         self.arch = arch
         self.distro = distro
         self.base = Path(workdir, str(distro), str(release), str(arch))
         self.sysroot = Path(self.base, "sysroot")
         self.downloads = Path(self.base, "downloads")
+        self.minimal = minimal_toolchain
 
         if print_dest_sysroot:
             print(self.sysroot.resolve())
@@ -61,7 +62,7 @@ class WorkEnvironment:
     def clean(self):
         self._symlink()
         self._delete()
-        if self.distro is Distro.ROBORIO:
+        if self.distro is Distro.ROBORIO and not self.minimal:
             self._major_only()
 
     def _major_only(self):

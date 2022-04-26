@@ -21,31 +21,36 @@ def arg_info():
     parser.add_argument("output", type=Path, default=Path("build"))
     parser.add_argument("--print-dest-sysroot",
                         default=False, action='store_true')
+    parser.add_argument("--minimal-toolchain",
+                        default=False, action='store_true')
     return parser.parse_args()
 
 
 def main():
     args = arg_info()
-
     repo_url = repo.get_repo_url(args.distro, args.arch)
     repo_packages_url = repo.get_repo_packages_url(
         args.distro, args.arch, args.release)
 
     env = WorkEnvironment(args.distro, args.arch, args.release,
-                          args.output, args.print_dest_sysroot)
+                          args.output, args.print_dest_sysroot,
+                          args.minimal_toolchain)
 
     db = Database(repo_packages_url)
     if args.distro == Distro.ROBORIO:
         assert args.arch is Arch.CORTEXA9
-        db.add_package("gcc-dev")
         db.add_package("libc6-dev")
-        db.add_package("libstdc++-dev")
-        db.add_package("libatomic-dev")
         db.add_package("linux-libc-headers-dev")
+        if not args.minimal_toolchain:
+            db.add_package("gcc-dev")
+            db.add_package("libstdc++-dev")
+            db.add_package("libatomic-dev")
     else:
         assert args.arch is not Arch.CORTEXA9
         db.add_package("gcc")
         db.add_package("g++")
+        if args.minimal_toolchain:
+            raise RuntimeError("Minimal toolchain flag is unsupported for Debian targets")
 
     db.post_resolve()
     db.download(repo_url, env.downloads)

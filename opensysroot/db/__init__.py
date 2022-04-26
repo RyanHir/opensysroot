@@ -188,6 +188,9 @@ class Database:
                 continue
             print("Downloading {}".format(pkg_file.name))
             pkg_data = requests.get("{}/{}".format(repo_url, pkg['filename']))
-            assert pkg_data.status_code == 200
+            if pkg_data.status_code != 200:
+                raise ConnectionError("Could not download {} due to status code {}".format(
+                    pkg_file.name,
+                    pkg_data.status_code))
             with pkg_file.open("wb") as fd:
                 fd.write(pkg_data.content)
